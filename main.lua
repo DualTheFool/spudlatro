@@ -21,6 +21,13 @@ SMODS.Atlas {
     py = 50
 }
 
+SMODS.Atlas {
+    key = "spuddeck",
+    path = "spuddeck.png",
+    px = 71,
+    py = 95,
+}
+
 
 SMODS.Seal {
     name = 'Potato Seal',
@@ -33,7 +40,8 @@ SMODS.Seal {
         name = 'Potato Seal',
         text = {
             '{C:money}-$#1#{} when played',
-            'Destroyed when played or enhanced',
+            'Sent to your {X:purple,C:white}Nemesis{} when played or enhanced',
+            'Cards are destroyed when sent, and added to decks before and after {C:attention}PvP Blinds'
         }
     },
     loc_vars = function(self, info_queue, card)
@@ -113,8 +121,6 @@ function makeCard(str)
 
 		local card_params = MP.UTILS.string_split(str, "-")
 
-		local suit = card_params[1]
-		local rank = card_params[2]
 		local enhancement = card_params[3]
 		local edition = card_params[4]
 		local seal = card_params[5]
@@ -167,3 +173,36 @@ if str == "A" then
 end
 return str
 end
+
+
+SMODS.Back{
+    key = 'spud',
+    name = 'sPuD deCK',
+    atlas = 'spuddeck',
+    pos = {x = 0, y = 0},
+    unlocked = true,
+
+    loc_txt = {
+        name = "sPud Deck",
+        text = {
+            "Start with 8 {C:attention}Sevens{} and No {C:attention}Aces{}",
+            "Starting Sevens have {C:attention}Potato Seals{} on them",
+        },
+    },
+
+    apply = function (self, back)
+        G.E_MANAGER:add_event(Event({
+            func = function ()
+                for _, card in ipairs(G.playing_cards) do
+                    if card.base.value == 'Ace' then
+                        assert(SMODS.change_base(card, nil, '7'))
+                    end
+                    if card.base.value == '7' then
+                        card:set_seal(DSHIT.id .. '_potato_seal', true)
+                    end
+                end
+                return true
+            end
+        }))
+    end
+}
