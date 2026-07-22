@@ -1,6 +1,8 @@
 DSHIT = SMODS.current_mod
 DSHIT.GAME = DSHIT.GAME or {}
 
+local base_seal_money = 1
+
 -- adds card to queue
 function add_card_queue(data)
     print("[Dshit] Got message")
@@ -28,22 +30,36 @@ SMODS.Atlas {
     py = 95,
 }
 
+SMODS.Atlas {
+    key = "couch_potato",
+    path = "couchjoker.png",
+    px = 71,
+    py = 95,
+}
+
+SMODS.current_mod.reset_game_globals = function(run_start)  
+    if run_start then  
+        -- Reset seal config to base value at start of new run  
+        G.P_SEALS[DSHIT.id .. '_potato_seal'].config.money = base_seal_money  
+    end  
+end
 
 SMODS.Seal {
     name = 'Potato Seal',
     key = 'potato_seal',
-	config = { money = 2 },
+	config = { money = base_seal_money },
     loc_txt = {
         -- Badge name (displayed on card description when seal is applied)
-        label = 'Dualsight\'s Shitshow',
+        label = 'Potato Seal',
         -- Tooltip description
         name = 'Potato Seal',
         text = {
-            '{C:money}-$#1#{} when played',
+            '{C:money}$#1#{} when played',
             'Sent to your {X:purple,C:white}Nemesis{} when played or enhanced',
             'Cards are destroyed when sent, and added to decks before and after {C:attention}PvP Blinds'
         }
     },
+    badge_colour = HEX('C77124'),
     loc_vars = function(self, info_queue, card)
         return { vars = { self.config.money } }
     end,
@@ -51,7 +67,7 @@ SMODS.Seal {
     pos = {x = 0, y = 0},
     sound = { sound = 'gold_seal', per = 1.2, vol = 0.4 },
     get_p_dollars = function(self, card)
-        return card.ability.seal.money * -1
+        return card.ability.seal.money * 1
     end,
 
     calculate = function (self, card, context)
@@ -149,6 +165,10 @@ function getValues(array)
 end
 
 function getEditionFromString(str) 
+if #SMODS.find_card('j_' .. DSHIT.id .. '_couch_potato') > 0 then
+    print("[Dshit] Bravo Six going dark")
+    return { negative = true }
+end
 if str == "none" then 
     return {}
 end
@@ -187,12 +207,14 @@ SMODS.Back{
         text = {
             "Start with 8 {C:attention}Sevens{} and No {C:attention}Aces{}",
             "Starting Sevens have {C:attention}Potato Seals{} on them",
+            "Potato Seals earn an additional dollar when played",
         },
     },
 
     apply = function (self, back)
         G.E_MANAGER:add_event(Event({
             func = function ()
+                G.P_SEALS[DSHIT.id .. '_potato_seal'].config.money = base_seal_money + 1
                 for _, card in ipairs(G.playing_cards) do
                     if card.base.value == 'Ace' then
                         assert(SMODS.change_base(card, nil, '7'))
@@ -204,5 +226,143 @@ SMODS.Back{
                 return true
             end
         }))
+    end,
+
+}
+
+SMODS.Joker {
+    key = 'couch_potato',
+    name = 'Couch Potato',
+    atlas = 'couch_potato',
+    loc_txt = {
+        name = 'Couch Potato',
+        text = {
+            'If a playing card is {C:attention}sent{} to you, ',
+            'set its edition to {C:dark_edition}Negative{}',
+            '{C:attention}-1{} Hand Size if your deck contains',
+            'a {C:attention}Potato Seal{}'
+        },
+    },
+    config = { extra = { h_size = 0 } },
+    blueprint_compat = false,
+    perishable_compat = true,
+    eternal_compat = true,
+    rarity = 3,
+    cost = 10,
+
+    calculate = function(self, card, context)
+        -- Hook into all drawing/card-state change contexts
+        if context.first_hand_drawn or context.discard or context.after or context.open_booster then
+            self:update_dynamic_hand_size(card)
+        end
+    end,
+
+    -- Remove whatever bonus was granted when sold/destroyed
+    remove_from_deck = function(self, card, from_debuff)
+        if card.ability.extra.h_size ~= 0 then
+            G.hand:change_size(card.ability.extra.h_size)
+            card.ability.extra.h_size = 0
+        end
+    end,
+
+    update_dynamic_hand_size = function(self, card)
+        if G.playing_cards then
+        for _, pcard in ipairs(G.playing_cards) do
+            if pcard.config and pcard.seal and pcard.seal == DSHIT.id .. '_potato_seal' then
+                if card.ability.extra.h_size == 0 then
+                    G.hand:change_size(-1)
+                    card.ability.extra.h_size = -1
+                end
+                return true
+            end
+        end
+        if card.ability.extra.h_size == -1 then
+            G.hand:change_size(1)
+            card.ability.extra.h_size = 0
+        end
+        return true
+    end
     end
 }
+--[[
+SMODS.Joker {
+    key = 'snack_ticket',
+    name = 'Meal Ticket',
+    loc_text = {
+        name = "Meal Ticket",
+        text = {
+            "Potato Cards give an additional $2 when sent or received"
+        }
+    },
+    blueprint_compat = true,
+    perishable_compat = true,
+    eternal_compat = true,
+    rarity = 2,
+    cost = 6
+}
+
+SMODS.Joker {
+    key = 'famine',
+    name = 'Famine',
+    loc_text = {
+        name = "Famine",
+        text = {
+            "When sold, all nemesis potato seals give -$1 when played."
+        }
+    },
+    blueprint_compat = true,
+    perishable_compat = true,
+    eternal_compat = true,
+    rarity = 1,
+    cost = 8
+}
+
+SMODS.Joker {
+    key = 'potatoprint',
+    name = 'Potatoprint',
+    loc_text = {
+        name = "Potatoprint",
+        text = {
+            "Retriggers rightmost joker if a potato seal was played last hand."
+        }
+    },
+    blueprint_compat = true,
+    perishable_compat = true,
+    eternal_compat = true,
+    rarity = 2,
+    cost = 8
+}
+
+SMODS.Joker {
+    key = 'spuderman',
+    name = 'Spuderman',
+    loc_text = {
+        name = "Spuderman",
+        text = {
+            "Played 7s are retriggered an additional 2 times.",
+            "Add a potato seal to each 7 played."
+        }
+    },
+    blueprint_compat = false,
+    perishable_compat = true,
+    eternal_compat = true,
+    rarity = 3,
+    cost = 6
+}
+
+SMODS.Joker {
+    key = 'hash',
+    name = 'Hash Browns',
+    loc_text = {
+        name = "Hash Browns",
+        text = {
+            "This joker gains +20 Chips per Potato Seal Sent",
+            "Consumed after receiving 10 Potato Seals."
+        }
+    },
+    blueprint_compat = true,
+    perishable_compat = true,
+    eternal_compat = false,
+    rarity = 1,
+    cost = 6
+} ]]--
