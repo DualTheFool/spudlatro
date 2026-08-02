@@ -6,16 +6,13 @@ local last_scored_hand = {}
 
 -- adds card to queue
 function add_card_queue(data)
-    print("[DSPUD] Got card message")
     if not DSPUD.GAME.card_queue then 
         DSPUD.GAME.card_queue = {}
     end
     DSPUD.GAME.card_queue[#DSPUD.GAME.card_queue + 1] = data.info
-    print("[DSPUD] Adding " .. DSPUD.GAME.card_queue[#DSPUD.GAME.card_queue] .. "to card queue")
 end
 
 function add_famine_charge(data)
-    print("[DSPUD] Got famine message")
     if not DSPUD.GAME.famine then 
         DSPUD.GAME.famine = 0
     end
@@ -144,7 +141,6 @@ SMODS.current_mod.calculate = function(self, context)
             if DSPUD.GAME.card_queue and DSPUD.GAME.card_queue[1] then
                 for value in getValues(DSPUD.GAME.card_queue) 
                 do 
-                print("[DSPUD] Making " .. value .. ".")
                 makeCard(value)
                 end
             DSPUD.GAME.card_queue = {}
@@ -173,7 +169,6 @@ SMODS.current_mod.calculate = function(self, context)
                 end
             for value in getValues(DSPUD.GAME.card_queue) 
                 do 
-                print("[DSPUD] Making " .. value .. ".")
                 makeCard(value)
             end
             DSPUD.GAME.card_queue = {}
@@ -226,7 +221,6 @@ end
 
 function getEditionFromString(str) 
 if #SMODS.find_card('j_' .. DSPUD.id .. '_couch_potato') > 0 then
-    print("[DSPUD] Bravo Six going dark")
     return { negative = true }
 end
 if str == "none" then 
