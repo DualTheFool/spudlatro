@@ -1,25 +1,25 @@
-DSHIT = SMODS.current_mod
-DSHIT.GAME = DSHIT.GAME or {}
+DSPUD = SMODS.current_mod
+DSPUD.GAME = DSPUD.GAME or {}
 
 local base_seal_money = 1
 local last_scored_hand = {}
 
 -- adds card to queue
 function add_card_queue(data)
-    print("[Dshit] Got card message")
-    if not DSHIT.GAME.card_queue then 
-        DSHIT.GAME.card_queue = {}
+    print("[DSPUD] Got card message")
+    if not DSPUD.GAME.card_queue then 
+        DSPUD.GAME.card_queue = {}
     end
-    DSHIT.GAME.card_queue[#DSHIT.GAME.card_queue + 1] = data.info
-    print("[Dshit] Adding " .. DSHIT.GAME.card_queue[#DSHIT.GAME.card_queue] .. "to card queue")
+    DSPUD.GAME.card_queue[#DSPUD.GAME.card_queue + 1] = data.info
+    print("[DSPUD] Adding " .. DSPUD.GAME.card_queue[#DSPUD.GAME.card_queue] .. "to card queue")
 end
 
 function add_famine_charge(data)
-    print("[Dshit] Got famine message")
-    if not DSHIT.GAME.famine then 
-        DSHIT.GAME.famine = 0
+    print("[DSPUD] Got famine message")
+    if not DSPUD.GAME.famine then 
+        DSPUD.GAME.famine = 0
     end
-    DSHIT.GAME.famine = DSHIT.GAME.famine + 1
+    DSPUD.GAME.famine = DSPUD.GAME.famine + 1
 end
 
 MP.register_mod_action("add-card", add_card_queue)
@@ -77,13 +77,13 @@ SMODS.Atlas {
 SMODS.current_mod.reset_game_globals = function(run_start)  
     if run_start then  
         -- Reset seal config to base value at start of new run  
-        G.P_SEALS[DSHIT.id .. '_potato_seal'].config.money = base_seal_money  
+        G.P_SEALS[DSPUD.id .. '_potato_seal'].config.money = base_seal_money  
         last_scored_hand = {}
     end  
 end
 
 function add_seal_money(amount)
-    G.P_SEALS[DSHIT.id .. '_potato_seal'].config.money = G.P_SEALS[DSHIT.id .. '_potato_seal'].config.money + amount
+    G.P_SEALS[DSPUD.id .. '_potato_seal'].config.money = G.P_SEALS[DSPUD.id .. '_potato_seal'].config.money + amount
 end
 
 SMODS.Seal {
@@ -116,7 +116,7 @@ SMODS.Seal {
     -- Deletes card if enhanced or played.
     -- Sends the card to opp to be added at pvp.
     if context.destroy_card == card and context.cardarea == G.play then 
-            MP.ACTIONS.modded(DSHIT.id, "add-card", { 
+            MP.ACTIONS.modded(DSPUD.id, "add-card", { 
                 type = "card", 
                 info = MP.UTILS.card_to_string(card)
             })
@@ -125,7 +125,7 @@ SMODS.Seal {
             }
         
     elseif context.setting_ability and context.other_card  == card and not (context.unchanged) then
-            MP.ACTIONS.modded(DSHIT.id, "add-card", { 
+            MP.ACTIONS.modded(DSPUD.id, "add-card", { 
                 type = "card", 
                 info = MP.UTILS.card_to_string(card)
             })
@@ -141,20 +141,20 @@ SMODS.Seal {
 SMODS.current_mod.calculate = function(self, context)
     if context.setting_blind
 			and context.blind.key == "bl_mp_nemesis" then
-            if DSHIT.GAME.card_queue and DSHIT.GAME.card_queue[1] then
-                for value in getValues(DSHIT.GAME.card_queue) 
+            if DSPUD.GAME.card_queue and DSPUD.GAME.card_queue[1] then
+                for value in getValues(DSPUD.GAME.card_queue) 
                 do 
-                print("[Dshit] Making " .. value .. ".")
+                print("[DSPUD] Making " .. value .. ".")
                 makeCard(value)
                 end
-            DSHIT.GAME.card_queue = {}
+            DSPUD.GAME.card_queue = {}
             end
-            if DSHIT.GAME.famine and DSHIT.GAME.famine > 0 then
+            if DSPUD.GAME.famine and DSPUD.GAME.famine > 0 then
                 local famine_amount = 0
-                while DSHIT.GAME.famine > 0 do
+                while DSPUD.GAME.famine > 0 do
                     add_seal_money(-1)
                     famine_amount = famine_amount + 1
-                    DSHIT.GAME.famine = DSHIT.GAME.famine - 1
+                    DSPUD.GAME.famine = DSPUD.GAME.famine - 1
                     card_eval_status_text(G.deck, 'extra', nil, nil, nil, {
                         message = "Famined!",
                         pitch = 0.5,
@@ -162,21 +162,21 @@ SMODS.current_mod.calculate = function(self, context)
                         delay = 1.0
                     })
                 end
-                DSHIT.GAME.famine = 0
+                DSPUD.GAME.famine = 0
             end
             return {}
     end
     if context.end_of_round and context.main_eval  then
             if MP.is_pvp_boss() then
-                if not DSHIT.GAME.card_queue or not DSHIT.GAME.card_queue[1] then
+                if not DSPUD.GAME.card_queue or not DSPUD.GAME.card_queue[1] then
                     return {}
                 end
-            for value in getValues(DSHIT.GAME.card_queue) 
+            for value in getValues(DSPUD.GAME.card_queue) 
                 do 
-                print("[Dshit] Making " .. value .. ".")
+                print("[DSPUD] Making " .. value .. ".")
                 makeCard(value)
             end
-            DSHIT.GAME.card_queue = {}
+            DSPUD.GAME.card_queue = {}
             return {}
         end
     end
@@ -225,8 +225,8 @@ function getValues(array)
 end
 
 function getEditionFromString(str) 
-if #SMODS.find_card('j_' .. DSHIT.id .. '_couch_potato') > 0 then
-    print("[Dshit] Bravo Six going dark")
+if #SMODS.find_card('j_' .. DSPUD.id .. '_couch_potato') > 0 then
+    print("[DSPUD] Bravo Six going dark")
     return { negative = true }
 end
 if str == "none" then 
@@ -292,10 +292,10 @@ SMODS.Back{
                     table.insert(G.playing_cards, card)
                     G.deck:emplace(card)
                 end
-                G.P_SEALS[DSHIT.id .. '_potato_seal'].config.money = base_seal_money + 1
+                G.P_SEALS[DSPUD.id .. '_potato_seal'].config.money = base_seal_money + 1
                 for _, card in ipairs(G.playing_cards) do
                     if card.base.value == '7' then
-                        card:set_seal(DSHIT.id .. '_potato_seal', true)
+                        card:set_seal(DSPUD.id .. '_potato_seal', true)
                     end
                 end
                 return true
@@ -343,7 +343,7 @@ SMODS.Joker {
     update_dynamic_hand_size = function(self, card)
         if G.playing_cards then
         for _, pcard in ipairs(G.playing_cards) do
-            if pcard.config and pcard.seal and pcard.seal == DSHIT.id .. '_potato_seal' then
+            if pcard.config and pcard.seal and pcard.seal == DSPUD.id .. '_potato_seal' then
                 if card.ability.extra.h_size == 0 then
                     G.hand:change_size(-1)
                     card.ability.extra.h_size = -1
@@ -393,7 +393,7 @@ SMODS.Joker {
     rarity = 1,
     cost = 8,
     remove_from_deck = function(self, card, from_debuff)
-        MP.ACTIONS.modded(DSHIT.id, "famine", {})
+        MP.ACTIONS.modded(DSPUD.id, "famine", {})
     end
 }
 
@@ -429,7 +429,7 @@ SMODS.Joker {
             last_scored_hand = {}
             self.config.active = false
             for _, pcard in ipairs(context.scoring_hand or {}) do
-                if pcard.config and pcard.seal and pcard.seal == DSHIT.id .. '_potato_seal' then
+                if pcard.config and pcard.seal and pcard.seal == DSPUD.id .. '_potato_seal' then
                     self.config.active  = true
                 end
             end
@@ -461,7 +461,7 @@ SMODS.Joker {
 			-- context.other_card is something that's used when either context.individual or context.repetition is true
 			-- It is each card 1 by 1, but in other cases, you'd need to iterate over the scoring hand to check which cards are there.
 			if context.other_card.base.value == '7' then
-                context.other_card:set_seal(DSHIT.id .. '_potato_seal', true)
+                context.other_card:set_seal(DSPUD.id .. '_potato_seal', true)
 				return {
 					repetitions = card.ability.extra.repetitions,
 				}
