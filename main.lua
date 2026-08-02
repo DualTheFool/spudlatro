@@ -2,6 +2,7 @@ DSHIT = SMODS.current_mod
 DSHIT.GAME = DSHIT.GAME or {}
 
 local base_seal_money = 1
+local last_scored_hand = {}
 
 -- adds card to queue
 function add_card_queue(data)
@@ -59,10 +60,25 @@ SMODS.Atlas {
     py = 95,
 }
 
+SMODS.Atlas {
+    key = "pprint",
+    path = "grandmajoker.png",
+    px = 71,
+    py = 95,
+}
+
+SMODS.Atlas {
+    key = "potatohead",
+    path = "potatohead.png",
+    px = 71,
+    py = 95,
+}
+
 SMODS.current_mod.reset_game_globals = function(run_start)  
     if run_start then  
         -- Reset seal config to base value at start of new run  
         G.P_SEALS[DSHIT.id .. '_potato_seal'].config.money = base_seal_money  
+        last_scored_hand = {}
     end  
 end
 
@@ -298,7 +314,7 @@ SMODS.Joker {
         text = {
             'If a playing card is {C:attention}sent{} to you, ',
             'set its edition to {C:dark_edition}Negative{}',
-            '{C:attention}-1{} Hand Size if your deck contains',
+            '{C:attention}-1{} hand size if your deck contains',
             'a {C:attention}Potato Seal{}'
         },
     },
@@ -367,8 +383,8 @@ SMODS.Joker {
     loc_txt = {
         name = "Famine",
         text = {
-            "When sold, all nemesis potato seals give -$1 when played.",
-            "Updates at PvP Blind."
+            "When sold, all {X:purple,C:white}Nemesis{} {C:attention}potato seals{} give {C:money}-$1{} when played,",
+            "Updates at {C:attention}PvP Blind{}"
         }
     },
     blueprint_compat = true,
@@ -380,23 +396,82 @@ SMODS.Joker {
         MP.ACTIONS.modded(DSHIT.id, "famine", {})
     end
 }
---[[
+
 SMODS.Joker {
     key = 'potatoprint',
     name = 'Potatoprint',
-    loc_text = {
-        name = "Potatoprint",
+    atlas = 'pprint',
+    config = { active = false },
+    loc_txt = {
+        name = "Grandma's Mashed Potato Recipe",
         text = {
-            "Retriggers rightmost joker if a potato seal was played last hand."
+            "Retriggers rightmost {C:attention}Joker{} if a {C:attention}potato seal{} was scored last hand."
         }
     },
     blueprint_compat = true,
     perishable_compat = true,
     eternal_compat = true,
     rarity = 2,
-    cost = 8
+    cost = 10,
+    calculate = function (self, card, context)
+        if self.config.active == true then
+            if #G.jokers.cards > 0 then 
+                local other_joker = G.jokers.cards[(#G.jokers.cards)]
+                if other_joker and other_joker ~= card then
+                     		        local other_joker_ret = SMODS.blueprint_effect(card, other_joker, context)
+ 		        if other_joker_ret then
+ 			        return other_joker_ret
+ 		        end
+                end
+            end
+        end
+        if context.after and not context.repetition then  
+            last_scored_hand = {}
+            self.config.active = false
+            for _, pcard in ipairs(context.scoring_hand or {}) do
+                if pcard.config and pcard.seal and pcard.seal == DSHIT.id .. '_potato_seal' then
+                    self.config.active  = true
+                end
+            end
+        end
+
+    end
+    
 }
 
+SMODS.Joker {
+    key = 'potatohead',
+    name = 'potatohead',
+    atlas = 'potatohead',
+    loc_txt = {
+        name = "Mr. Potato Head",
+        text = {
+            "Retrigger each played {C:attention}7{}",
+            "Add a {C:attention}potato seal{} to each {C:attention}7{} played."
+        }
+    },
+    config = { extra = { repetitions = 1 } },
+    blueprint_compat = true,
+    perishable_compat = true,
+    eternal_compat = true,
+    rarity = 1,
+    cost = 6,
+    calculate = function (self, card, context)
+		if context.cardarea == G.play and context.repetition and not context.repetition_only then
+			-- context.other_card is something that's used when either context.individual or context.repetition is true
+			-- It is each card 1 by 1, but in other cases, you'd need to iterate over the scoring hand to check which cards are there.
+			if context.other_card.base.value == '7' then
+                context.other_card:set_seal(DSHIT.id .. '_potato_seal', true)
+				return {
+					repetitions = card.ability.extra.repetitions,
+				}
+			end
+        end
+
+    end
+}
+
+--[[
 SMODS.Joker {
     key = 'spuderman',
     name = 'Spuderman',
