@@ -265,8 +265,8 @@ SMODS.Back{
     loc_txt = {
         name = "sPud Deck",
         text = {
-            "Start with 8 {C:attention}Sevens{} ",
-            "with {C:attention}Potato Seals{}",
+            "Start with 4 additional{C:attention}Sevens{} ",
+            "and a Negative{C:attention}Mr. Potato Head{}",
             "Potato Seals earn an additional dollar when played",
         },
     },
@@ -293,11 +293,11 @@ SMODS.Back{
                     G.deck:emplace(card)
                 end
                 G.P_SEALS[DSPUD.id .. '_potato_seal'].config.money = base_seal_money + 1
-                for _, card in ipairs(G.playing_cards) do
-                    if card.base.value == '7' then
-                        card:set_seal(DSPUD.id .. '_potato_seal', true)
-                    end
-                end
+                SMODS.add_card({
+                    key = 'j_' .. DSPUD.id .. '_potatohead', -- Change to any Joker key
+                    edition = 'e_negative',
+                    area = G.jokers
+                })
                 return true
             end
         }))
