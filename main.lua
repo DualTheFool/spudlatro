@@ -265,8 +265,8 @@ SMODS.Back{
     loc_txt = {
         name = "sPud Deck",
         text = {
-            "Start with 4 additional{C:attention}Sevens{} ",
-            "and a {C:dark_editionNegative{} {C:attention}Mr. Potato Head{}",
+            "Start with 4 additional {C:attention}Sevens{} ",
+            "and a {C:dark_edition}Negative{} {C:attention}Mr. Potato Head{}",
             "Potato Seals earn an additional dollar when played",
         },
     },
