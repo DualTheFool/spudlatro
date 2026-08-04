@@ -1,7 +1,7 @@
 # Spudlatro - A Balatro Multiplayer Add-On.
 
 ### Developed By Dualsight
-
+--
 ## Only tested and recommended for multiplayer.
 
 Have you ever wanted more player interaction within Balatro Multiplayer? This mod is here to fill that niche!
